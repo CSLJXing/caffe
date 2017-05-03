@@ -1,0 +1,44 @@
+force_backward: true
+
+layer {
+  name: "data1"
+  type: "Input"
+  top: "data1"
+  input_param {
+    shape {
+      dim: 1
+      dim: 4
+    }
+  }
+}
+layer {
+  name: "data2"
+  type: "Input"
+  top: "data2"
+  input_param {
+    shape {
+      dim: 1
+      dim: 4
+    }
+  }
+}
+layer {
+  name: "norm1"
+  type: "Normalize"
+  bottom: "data1"
+  top: "norm1"
+}
+layer {
+  name: "norm2"
+  type: "Normalize"
+  bottom: "data2"
+  top: "norm2"
+}
+layer {
+  name: "loss"
+  type: "CosLoss"
+  bottom: "norm1"
+  bottom: "norm2"
+  top: "loss"
+  loss_weight: 1
+}

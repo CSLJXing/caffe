@@ -405,6 +405,12 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional CSVDataParameter csv_data_param = 155;
+  optional HuberLossParameter huber_loss_param = 169;
+}
+
+message HuberLossParameter {
+  optional float delta = 1 [default = 0.5];
 }
 
 // Message that stores parameters used to apply transformation
@@ -420,7 +426,7 @@ message TransformationParameter {
   optional uint32 crop_size = 3 [default = 0];
   // mean_file and mean_value cannot be specified at the same time
   optional string mean_file = 4;
-  // if specified can be repeated once (would subtract it from all the channels)
+  // if specified can be repeated once (would substract it from all the channels)
   // or can be repeated the same number of times as channels
   // (would subtract them from the corresponding channel)
   repeated float mean_value = 5;
@@ -428,6 +434,38 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+
+  //if set to true,
+  //instead using a fixed position cropping (center, left-up, left-down, right-up, right-down)
+  optional bool fix_crop = 10 [default = false];
+  //turn on to use stronger augmentation
+  optional bool more_fix_crop = 15 [default = false];
+
+  //if set to true, use multi-scale data augmentation
+  optional bool multi_scale = 11 [default = false];
+
+  // a list of float numbers less than 1 for multiple scales
+  repeated float scale_ratios = 12;
+
+  // maximal tolerated aspect ratio mismatch in the ratio list
+  optional int32 max_distort = 13 [default = 1];
+
+  //if set to true, it is optical flow field
+  optional bool is_flow = 14 [default = false];
+
+  //if set to true, will use original image processing mode
+  // i.e. will use Inception style data augmentation
+  optional bool original_image = 20 [ default = false];
+  optional float original_min_scale = 36 [default = 0.08];
+
+  // resize image to min(height, width) == short_edge_size,
+  // and crop (short_edge, short_edge_size)
+  repeated uint32 short_edge = 31;
+  // random crop image when phase is test
+  optional bool rand_crop_test = 33 [default = false];
+  // Standard color augmentation in AlexNet
+  optional int32 eigs_channels = 34 [default = 3];
+  repeated float eigs = 35;
 }
 
 // Message that stores parameters shared by loss layers
@@ -800,6 +838,22 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+}
+
+message CSVDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  // Specify the batch size.
+  optional uint32 batch_size = 4 [default = 1];
+  // Specify the number of columns for input
+  optional uint32 num_feature = 10;
+  // The rand_skip variable is for the data layer to skip a few data points
+  // to avoid all asynchronous sgd clients to start at the same point. The skip
+  // point would be set as rand_skip * rand(0,1). Note that rand_skip should not
+  // be larger than the number of keys in the database.
+  optional uint32 rand_skip = 7 [default = 0];
+  // Whether or not ImageLayer should shuffle the list of files at every epoch.
+  optional bool shuffle = 8 [default = false];
 }
 
 message InfogainLossParameter {
