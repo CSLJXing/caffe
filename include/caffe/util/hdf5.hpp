@@ -30,6 +30,10 @@ void hdf5_save_int(hid_t loc_id, const string& dataset_name, int i);
 string hdf5_load_string(hid_t loc_id, const string& dataset_name);
 void hdf5_save_string(hid_t loc_id, const string& dataset_name,
                       const string& s);
+template <typename Dtype>
+Dtype hdf5_load_float(hid_t loc_id, const string& dataset_name);
+template <typename Dtype>
+void hdf5_save_float(hid_t loc_id, const string& dataset_name, Dtype f);
 
 int hdf5_get_num_links(hid_t loc_id);
 string hdf5_get_name_by_idx(hid_t loc_id, int idx);
