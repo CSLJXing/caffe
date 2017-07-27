@@ -116,7 +116,10 @@ class Solver {
   vector<shared_ptr<Net<Dtype> > > test_nets_;
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
-  Dtype smoothed_loss_;
+  Dtype smoothed_loss_ = 0;
+
+  // HOTFIX1: enabling average loss in py-faster-rcnn
+  int start_iter_ = 0;
 
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
