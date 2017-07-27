@@ -35,15 +35,20 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
+  const int ndim_label = this->layer_param_.image_data_param().ndim_label();
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
-  string line;
-  size_t pos;
-  int label;
-  while (std::getline(infile, line)) {
-    pos = line.find_last_of(' ');
-    label = atoi(line.substr(pos + 1).c_str());
-    lines_.push_back(std::make_pair(line.substr(0, pos), label));
+  std::string name;
+  float label;
+  while (infile >> name)
+  {
+    std::vector<float> label_vector(ndim_label, 0);
+    for (int i = 0; i < ndim_label; ++i)
+    {
+      infile >> label;
+      label_vector[i] = label;
+    }
+    lines_.push_back(std::make_pair(name, label_vector));
   }
 
   CHECK(!lines_.empty()) << "File is empty";
@@ -92,6 +97,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->width();
   // label
   vector<int> label_shape(1, batch_size);
+  label_shape.push_back(ndim_label);
   top[1]->Reshape(label_shape);
   for (int i = 0; i < this->prefetch_.size(); ++i) {
     this->prefetch_[i]->label_.Reshape(label_shape);
@@ -121,6 +127,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
   string root_folder = image_data_param.root_folder();
+  const int ndim_label = image_data_param.ndim_label();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -149,12 +156,19 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image
-    int offset = batch->data_.offset(item_id);
-    this->transformed_data_.set_cpu_data(prefetch_data + offset);
+    int image_offset = batch->data_.offset(item_id);
+    this->transformed_data_.set_cpu_data(prefetch_data + image_offset);
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    prefetch_label[item_id] = lines_[lines_id_].second;
+    // prefetch_label[item_id] = lines_[lines_id_].second;
+    int label_offset = batch->label_.offset(item_id);
+    Dtype* this_label = prefetch_label + label_offset;
+    for (int i = 0; i < ndim_label; ++i)
+    {
+      this_label[i] = lines_[lines_id_].second[i];
+    }
+
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {

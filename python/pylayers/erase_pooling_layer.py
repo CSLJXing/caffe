@@ -35,7 +35,7 @@ class ErasePoolingLayer(caffe.Layer):
 
     def forward(self, bottom, top):
         top[0].data[...] = bottom[0].data[...]
-        clsIdx = np.argmax(bottom[2].data, axis=1)
+        clsIdx = np.argmax(bottom[2].data, axis=1).astype(np.int32)
         for idx,cls in enumerate(clsIdx):
             prob_map = bottom[1].data[idx,cls]
             heat_array = prob_map.flatten()
