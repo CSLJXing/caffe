@@ -55,6 +55,10 @@ void InitLog() {
   ::google::InitGoogleLogging("");
   ::google::InstallFailureSignalHandler();
 }
+void InitLog(string name="") {
+  ::google::InitGoogleLogging(name.c_str());
+  ::google::InstallFailureSignalHandler();
+}
 void InitLogLevel(int level) {
   FLAGS_minloglevel = level;
   InitLog();
